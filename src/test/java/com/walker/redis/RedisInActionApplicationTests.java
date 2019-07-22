@@ -16,8 +16,7 @@ public class RedisInActionApplicationTests {
 
     @Test
     public void contextLoads() {
-        redisTemplate.opsForValue().set("hello", "world");
-        String result = redisTemplate.opsForValue().get("hello");
+        Boolean result = redisTemplate.opsForZSet().add("time:", "article:3", System.currentTimeMillis());
         System.out.println(result);
     }
 
