@@ -2,12 +2,11 @@ package com.walker.redis.controller;
 
 import com.walker.redis.common.ProjectConstant;
 import com.walker.redis.common.ResultResponse;
+import com.walker.redis.vo.AddGroupsVO;
+import com.walker.redis.vo.RemoveGroupsVO;
+import org.springframework.data.redis.connection.RedisZSetCommands;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -87,18 +86,33 @@ public class ArticleVoteController {
         return ResultResponse.success(items);
     }
 
+    @GetMapping("/get/group/articles")
+    public ResultResponse<List<Map<Object, Object>>> getGroupArticles(int page, String group, @RequestParam(defaultValue = "score:") String order) {
+        String key = order + group;
+        Boolean hasKey = redisTemplate.hasKey(key);
+        if (Objects.nonNull(hasKey) && !hasKey) {
+            // 根据评分或者发布时间，对群组文章进行排序
+            List<String> otherKeys = new ArrayList<>();
+            otherKeys.add(order);
+
+            redisTemplate.opsForZSet().intersectAndStore("group:" + group, otherKeys, key, RedisZSetCommands.Aggregate.MAX);
+            redisTemplate.expire(key, 60, TimeUnit.SECONDS);
+        }
+        return getArticles(page, key);
+    }
+
     @PostMapping("/add/groups")
-    public ResultResponse addGroups(String articleId, List<String> toAdd) {
-        String article = "article:" + articleId;
-        toAdd.forEach(group -> redisTemplate.opsForSet().add("group:" + group, article));
+    public ResultResponse addGroups(@RequestBody AddGroupsVO addGroupsVO) {
+        String article = "article:" + addGroupsVO.getArticleId();
+        addGroupsVO.getToAdd().forEach(group -> redisTemplate.opsForSet().add("group:" + group, article));
 
         return ResultResponse.success();
     }
 
     @PostMapping("/remove/groups")
-    public ResultResponse removeGroups(String articleId, List<String> toRemove) {
-        String article = "article:" + articleId;
-        toRemove.forEach(group -> redisTemplate.opsForSet().remove("group:" + group, article));
+    public ResultResponse removeGroups(@RequestBody RemoveGroupsVO removeGroupsVO) {
+        String article = "article:" + removeGroupsVO.getArticleId();
+        removeGroupsVO.getToRemove().forEach(group -> redisTemplate.opsForSet().remove("group:" + group, article));
 
         return ResultResponse.success();
     }

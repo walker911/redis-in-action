@@ -11,4 +11,6 @@ public class ProjectConstant {
     public static final double VOTE_SCORE = 432;
 
     public static final int ARTICLES_PER_PAGE = 25;
+
+    public static final int LIMIT = 10000000;
 }
