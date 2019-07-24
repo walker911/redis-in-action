@@ -12,5 +12,5 @@ public class ProjectConstant {
 
     public static final int ARTICLES_PER_PAGE = 25;
 
-    public static final int LIMIT = 10000000;
+    public static final long LIMIT = 10000000;
 }
