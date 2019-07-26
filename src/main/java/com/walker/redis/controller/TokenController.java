@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * @author walker
@@ -38,8 +37,10 @@ public class TokenController {
         redisTemplate.opsForHash().put("login:", token, user);
         redisTemplate.opsForZSet().add("recent:", token, timestamp);
         if (StringUtils.isNotBlank(item)) {
+            redisTemplate.opsForList().leftPush("viewed:" + token, item);
             redisTemplate.opsForZSet().add("viewed:" + token, item, timestamp);
             // 移除旧的记录, 只保留最近浏览的25条
+            redisTemplate.opsForList().trim("viewed:" + token, 0, 25);
             redisTemplate.opsForZSet().removeRange("viewed:" + token, 0, -26);
             // 记录商品浏览次数
             redisTemplate.opsForZSet().incrementScore("viewed:", item, -1);
