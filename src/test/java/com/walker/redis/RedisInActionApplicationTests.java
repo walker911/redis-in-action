@@ -17,8 +17,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -220,5 +223,47 @@ public class RedisInActionApplicationTests {
         System.out.println(object.toString());
         Finance finance = JSON.parseObject(object.toString(), Finance.class);
         System.out.println(JSON.toJSONString(finance));
+    }
+
+    @Test
+    public void test() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        System.out.println(LocalTime.now().format(formatter));
+    }
+
+    @Test
+    public void provinceOrder() {
+        String json = "[{\"province\":\"武汉\",\"drive\":\"123\",\"transfer\":\"123\",\"other\":\"123\"}," +
+                "{\"province\":\"上海\",\"drive\":\"123\",\"transfer\":\"123\",\"other\":\"124\"}," +
+                "{\"province\":\"北京\",\"drive\":\"123\",\"transfer\":\"123\",\"other\":\"121\"}]";
+        List<ProvinceOrderDTO> orders = JSON.parseArray(json, ProvinceOrderDTO.class);
+
+        orders.sort(Comparator.comparing(order -> {
+            int drive = order.getDrive() == null ? 0 : order.getDrive();
+            int transfer = order.getTransfer() == null ? 0 : order.getTransfer();
+            int other = order.getOther() == null ? 0 : order.getOther();
+            return drive + transfer + other;
+        }));
+        Collections.reverse(orders);
+        System.out.println(JSON.toJSONString(orders));
+
+        redisTemplate.opsForValue().set("car:butler:province:order", JSON.toJSONString(orders));
+    }
+
+    @Test
+    public void dayOrder() {
+        String json = "[{\"hour\":1,\"num\":100},{\"hour\":2,\"num\":100},{\"hour\":3,\"num\":100}," +
+                "{\"hour\":4,\"num\":100},{\"hour\":5,\"num\":100},{\"hour\":6,\"num\":100}," +
+                "{\"hour\":7,\"num\":100},{\"hour\":8,\"num\":100},{\"hour\":9,\"num\":100}," +
+                "{\"hour\":10,\"num\":100},{\"hour\":11,\"num\":100},{\"hour\":12,\"num\":100}," +
+                "{\"hour\":13,\"num\":100},{\"hour\":14,\"num\":100},{\"hour\":15,\"num\":100}," +
+                "{\"hour\":16,\"num\":100},{\"hour\":17,\"num\":100},{\"hour\":18,\"num\":100}," +
+                "{\"hour\":19,\"num\":100},{\"hour\":20,\"num\":100},{\"hour\":21,\"num\":100}," +
+                "{\"hour\":22,\"num\":100},{\"hour\":23,\"num\":100},{\"hour\":24,\"num\":100}]";
+
+        List<DayOrderDTO> dtos = JSON.parseArray(json, DayOrderDTO.class);
+        Map<String, String> params = dtos.stream().collect(Collectors.toMap(DayOrderDTO::getHour, DayOrderDTO::getNum));
+
+        redisTemplate.opsForHash().putAll("car:butler:day:order", params);
     }
 }
