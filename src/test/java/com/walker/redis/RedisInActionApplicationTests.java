@@ -244,7 +244,6 @@ public class RedisInActionApplicationTests {
             int other = order.getOther() == null ? 0 : order.getOther();
             return drive + transfer + other;
         }));
-        Collections.reverse(orders);
         System.out.println(JSON.toJSONString(orders));
 
         redisTemplate.opsForValue().set("car:butler:province:order", JSON.toJSONString(orders));
@@ -252,14 +251,19 @@ public class RedisInActionApplicationTests {
 
     @Test
     public void dayOrder() {
-        String json = "[{\"hour\":1,\"num\":100},{\"hour\":2,\"num\":100},{\"hour\":3,\"num\":100}," +
-                "{\"hour\":4,\"num\":100},{\"hour\":5,\"num\":100},{\"hour\":6,\"num\":100}," +
-                "{\"hour\":7,\"num\":100},{\"hour\":8,\"num\":100},{\"hour\":9,\"num\":100}," +
-                "{\"hour\":10,\"num\":100},{\"hour\":11,\"num\":100},{\"hour\":12,\"num\":100}," +
-                "{\"hour\":13,\"num\":100},{\"hour\":14,\"num\":100},{\"hour\":15,\"num\":100}," +
-                "{\"hour\":16,\"num\":100},{\"hour\":17,\"num\":100},{\"hour\":18,\"num\":100}," +
-                "{\"hour\":19,\"num\":100},{\"hour\":20,\"num\":100},{\"hour\":21,\"num\":100}," +
-                "{\"hour\":22,\"num\":100},{\"hour\":23,\"num\":100},{\"hour\":24,\"num\":100}]";
+        String json = "[{\"hour\":2019082210,\"num\":100},{\"hour\":2019082209,\"num\":200}," +
+                "{\"hour\":2019082208,\"num\":250},{\"hour\":2019082207,\"num\":300}," +
+                "{\"hour\":2019082206,\"num\":350},{\"hour\":2019082205,\"num\":400}," +
+                "{\"hour\":2019082204,\"num\":430},{\"hour\":2019082203,\"num\":340}," +
+                "{\"hour\":2019082202,\"num\":542},{\"hour\":2019082201,\"num\":290}," +
+                "{\"hour\":2019082200,\"num\":390},{\"hour\":2019082123,\"num\":460}," +
+                "{\"hour\":2019082122,\"num\":560},{\"hour\":2019082121,\"num\":510}," +
+                "{\"hour\":2019082120,\"num\":670},{\"hour\":2019082119,\"num\":320}," +
+                "{\"hour\":2019082118,\"num\":312},{\"hour\":2019082117,\"num\":345}," +
+                "{\"hour\":2019082116,\"num\":323},{\"hour\":2019082115,\"num\":421}," +
+                "{\"hour\":2019082114,\"num\":126},{\"hour\":2019082113,\"num\":230}," +
+                "{\"hour\":2019082112,\"num\":280},{\"hour\":2019082111,\"num\":240}," +
+                "{\"hour\":2019082110,\"num\":180}]";
 
         List<DayOrderDTO> dtos = JSON.parseArray(json, DayOrderDTO.class);
         Map<String, String> params = dtos.stream().collect(Collectors.toMap(DayOrderDTO::getHour, DayOrderDTO::getNum));
