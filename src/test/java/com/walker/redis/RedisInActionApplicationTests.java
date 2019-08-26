@@ -72,7 +72,7 @@ public class RedisInActionApplicationTests {
         for (int i = 0; i < 3; i++) {
             Thread thread = new Thread(() -> {
                 try {
-                    trans();
+                    sessionCallback();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -97,15 +97,15 @@ public class RedisInActionApplicationTests {
     private void sessionCallback() {
         SessionCallback<Object> callback = new SessionCallback<Object>() {
             @Override
-            public Object execute(RedisOperations operations) throws DataAccessException {
+            public <K, V> Object execute(RedisOperations<K, V> operations) throws DataAccessException {
                 operations.multi();
-                operations.opsForValue().increment("trans:");
+                operations.opsForValue().increment((K) "trans:");
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                redisTemplate.opsForValue().increment("trans:", -1);
+                operations.opsForValue().increment((K) "trans:", -1);
                 return operations.exec();
             }
         };
