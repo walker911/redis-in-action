@@ -35,10 +35,10 @@ public class LogRedis {
 
         SessionCallback<Object> callback = new SessionCallback<Object>() {
             @Override
-            public <K, V> Object execute(RedisOperations<K, V> operations) throws DataAccessException {
+            public Object execute(RedisOperations operations) throws DataAccessException {
                 operations.multi();
-                operations.opsForList().leftPush((K) destination, (V) log);
-                operations.opsForList().trim((K) destination, 0, 99);
+                operations.opsForList().leftPush(destination, log);
+                operations.opsForList().trim(destination, 0, 99);
                 return operations.exec();
             }
         };

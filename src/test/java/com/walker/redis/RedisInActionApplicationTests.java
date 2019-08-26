@@ -97,15 +97,15 @@ public class RedisInActionApplicationTests {
     private void sessionCallback() {
         SessionCallback<Object> callback = new SessionCallback<Object>() {
             @Override
-            public <K, V> Object execute(RedisOperations<K, V> operations) throws DataAccessException {
+            public Object execute(RedisOperations operations) throws DataAccessException {
                 operations.multi();
-                operations.opsForValue().increment((K) "trans:");
+                operations.opsForValue().increment("trans:");
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                operations.opsForValue().increment((K) "trans:", -1);
+                operations.opsForValue().increment("trans:", -1);
                 return operations.exec();
             }
         };
