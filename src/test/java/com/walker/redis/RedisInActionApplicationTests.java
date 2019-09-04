@@ -1,5 +1,6 @@
 package com.walker.redis;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.walker.redis.dto.*;
@@ -269,5 +270,50 @@ public class RedisInActionApplicationTests {
         Map<String, String> params = dtos.stream().collect(Collectors.toMap(DayOrderDTO::getHour, DayOrderDTO::getNum));
 
         redisTemplate.opsForHash().putAll("car:butler:day:order", params);
+    }
+
+    @Test
+    public void readStoreExcel() {
+        Map<String, Integer> provinces = new HashMap<>();
+        provinces.put("河北", 0);
+        provinces.put("内蒙古", 1);
+        provinces.put("浙江", 2);
+        provinces.put("辽宁", 3);
+        provinces.put("山东", 4);
+        provinces.put("广东", 5);
+        provinces.put("广西", 6);
+        provinces.put("湖南", 7);
+        provinces.put("湖北", 8);
+        provinces.put("江苏", 9);
+        provinces.put("贵州", 10);
+        provinces.put("河南", 11);
+        provinces.put("山西", 12);
+        provinces.put("西藏", 13);
+        provinces.put("吉林", 14);
+        provinces.put("福建", 15);
+        provinces.put("安徽", 16);
+        provinces.put("宁夏", 17);
+        provinces.put("甘肃", 18);
+        provinces.put("江西", 19);
+        provinces.put("四川", 20);
+        provinces.put("新疆", 21);
+        provinces.put("陕西", 22);
+        provinces.put("青海", 23);
+        provinces.put("云南", 23);
+        provinces.put("上海", 25);
+        provinces.put("北京", 26);
+        provinces.put("黑龙江", 27);
+        provinces.put("天津", 28);
+        provinces.put("海南", 29);
+        provinces.put("重庆", 30);
+        String path = "E:\\project\\redis-in-action\\src\\main\\resources\\网点导出列表.xlsx";
+        // 读取Excel
+        List<Object> items = EasyExcel.read(path).head(StoreDTO.class).sheet().doReadSync();
+        for (Object item : items) {
+            StoreDTO dto = (StoreDTO) item;
+            int suffix = provinces.get(dto.getProvince());
+            String key = "car:butler:virtual:store:" + suffix;
+            redisTemplate.opsForList().leftPush(key, dto.getName());
+        }
     }
 }
