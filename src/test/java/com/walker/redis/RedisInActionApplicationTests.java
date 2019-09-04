@@ -7,6 +7,7 @@ import com.walker.redis.util.HttpClientUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
@@ -233,20 +234,19 @@ public class RedisInActionApplicationTests {
 
     @Test
     public void provinceOrder() {
-        String json = "[{\"province\":\"武汉\",\"drive\":\"123\",\"transfer\":\"123\",\"other\":\"123\"}," +
-                "{\"province\":\"上海\",\"drive\":\"123\",\"transfer\":\"123\",\"other\":\"124\"}," +
-                "{\"province\":\"北京\",\"drive\":\"123\",\"transfer\":\"123\",\"other\":\"121\"}]";
-        List<ProvinceOrderDTO> orders = JSON.parseArray(json, ProvinceOrderDTO.class);
+        String json = "{\"orderData\":[{\"driveNum\":11,\"otherNum\":1,\"province\":\"山东\",\"transferNum\":1},{\"driveNum\":8,\"otherNum\":1,\"province\":\"福建\",\"transferNum\":2},{\"driveNum\":4,\"otherNum\":3,\"province\":\"河北\",\"transferNum\":8},{\"driveNum\":20,\"otherNum\":3,\"province\":\"河南\",\"transferNum\":2},{\"driveNum\":3,\"otherNum\":2,\"province\":\"重庆\",\"transferNum\":5},{\"driveNum\":9,\"otherNum\":4,\"province\":\"湖北\",\"transferNum\":0},{\"driveNum\":8,\"otherNum\":0,\"province\":\"湖南\",\"transferNum\":0},{\"driveNum\":1,\"otherNum\":0,\"province\":\"江西\",\"transferNum\":0},{\"driveNum\":5,\"otherNum\":0,\"province\":\"海南\",\"transferNum\":4},{\"driveNum\":0,\"otherNum\":0,\"province\":\"黑龙江\",\"transferNum\":8},{\"driveNum\":1,\"otherNum\":0,\"province\":\"天津\",\"transferNum\":2},{\"driveNum\":0,\"otherNum\":0,\"province\":\"陕西\",\"transferNum\":5},{\"driveNum\":1,\"otherNum\":0,\"province\":\"贵州\",\"transferNum\":0},{\"driveNum\":0,\"otherNum\":0,\"province\":\"新疆\",\"transferNum\":1},{\"driveNum\":10,\"otherNum\":7,\"province\":\"江苏\",\"transferNum\":17},{\"driveNum\":3,\"otherNum\":1,\"province\":\"安徽\",\"transferNum\":4},{\"driveNum\":0,\"otherNum\":0,\"province\":\"西藏\",\"transferNum\":1},{\"driveNum\":2,\"otherNum\":0,\"province\":\"吉林\",\"transferNum\":12},{\"driveNum\":51,\"otherNum\":21,\"province\":\"上海\",\"transferNum\":150},{\"driveNum\":0,\"otherNum\":0,\"province\":\"宁夏\",\"transferNum\":3},{\"driveNum\":0,\"otherNum\":0,\"province\":\"甘肃\",\"transferNum\":1},{\"driveNum\":3,\"otherNum\":0,\"province\":\"山西\",\"transferNum\":0},{\"driveNum\":14,\"otherNum\":1,\"province\":\"四川\",\"transferNum\":21},{\"driveNum\":2,\"otherNum\":1,\"province\":\"广西\",\"transferNum\":0},{\"driveNum\":4,\"otherNum\":5,\"province\":\"浙江\",\"transferNum\":11},{\"driveNum\":2,\"otherNum\":0,\"province\":\"云南\",\"transferNum\":2},{\"driveNum\":22,\"otherNum\":0,\"province\":\"内蒙古\",\"transferNum\":1},{\"driveNum\":2,\"otherNum\":0,\"province\":\"辽宁\",\"transferNum\":19},{\"driveNum\":31,\"otherNum\":5,\"province\":\"广东\",\"transferNum\":23},{\"driveNum\":3,\"otherNum\":4,\"province\":\"北京\",\"transferNum\":21}]}";
+        ProvinceOrderResponse response = JSON.parseObject(json, ProvinceOrderResponse.class);
 
-        orders.sort(Comparator.comparing(order -> {
-            int drive = order.getDrive() == null ? 0 : order.getDrive();
-            int transfer = order.getTransfer() == null ? 0 : order.getTransfer();
-            int other = order.getOther() == null ? 0 : order.getOther();
-            return drive + transfer + other;
-        }));
-        System.out.println(JSON.toJSONString(orders));
+        Map<String, String> params = new HashMap<>();
+        response.getOrderData().forEach(dto -> {
+            List<ProvinceOrderNumDTO> numDTOS = new ArrayList<>();
+            ProvinceOrderNumDTO numDTO = new ProvinceOrderNumDTO();
+            BeanUtils.copyProperties(dto, numDTO);
+            numDTOS.add(numDTO);
+            params.put(dto.getProvince(), JSON.toJSONString(numDTOS));
+        });
 
-        redisTemplate.opsForValue().set("car:butler:province:order", JSON.toJSONString(orders));
+        redisTemplate.opsForHash().putAll("car:butler:province:order", params);
     }
 
     @Test

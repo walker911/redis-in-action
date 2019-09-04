@@ -4,11 +4,10 @@ import lombok.Data;
 
 /**
  * @author walker
- * @date 2019/8/16
+ * @date 2019/8/21
  */
 @Data
-public class ProvinceOrderDTO {
-    private String province;
+public class ProvinceOrderNumDTO {
 
     private Integer driveNum;
 
