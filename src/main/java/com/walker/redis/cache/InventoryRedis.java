@@ -1,5 +1,6 @@
 package com.walker.redis.cache;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,8 @@ public class InventoryRedis {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private LockRedis lockRedis;
 
     public boolean sellItem(String itemId, String sellerId, Double price) {
         String inventory = String.format("inventory:%s", sellerId);
@@ -82,6 +85,43 @@ public class InventoryRedis {
             }
         }
 
+        return false;
+    }
+
+    public boolean purchaseItemWithLock(String buyerId, String itemId, String sellerId, Double price) {
+        String buyer = String.format("user:%s", buyerId);
+        String seller = String.format("user:%s", sellerId);
+        String item = String.format("%s.%s", itemId, sellerId);
+        String inventory = String.format("inventory:%s", buyerId);
+
+        redisTemplate.setEnableTransactionSupport(true);
+        String locked = lockRedis.acquireLock("market", 10000);
+        if (StringUtils.isBlank(locked)) {
+            return false;
+        }
+
+        try {
+            // 检查价格
+            Double sellerPrice = redisTemplate.opsForZSet().score("market:", item);
+            Object obj = redisTemplate.opsForHash().get(buyer, "funds");
+            Double funds = Double.parseDouble(String.valueOf(obj));
+            if (!price.equals(sellerPrice) || price > funds) {
+                return false;
+            }
+
+            redisTemplate.multi();
+            redisTemplate.opsForHash().increment(seller, "funds", price);
+            redisTemplate.opsForHash().increment(buyer, "funds", -price);
+            redisTemplate.opsForSet().add(inventory, itemId);
+            redisTemplate.opsForZSet().remove("market", item);
+            redisTemplate.exec();
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lockRedis.releaseLock("market", locked);
+        }
         return false;
     }
 }
