@@ -1,5 +1,6 @@
 package com.walker.redis.cache;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,8 @@ import java.util.UUID;
 public class SemaphoreRedis {
     @Autowired
     private StringRedisTemplate redisTemplate;
+    @Autowired
+    private LockRedis lock;
 
     public String acquireSemaphore(String semname, int limit, int timeout) {
         String identifier = UUID.randomUUID().toString();
@@ -86,5 +89,42 @@ public class SemaphoreRedis {
         redisTemplate.opsForZSet().remove(semname, identifier);
         redisTemplate.opsForZSet().remove(semname + ":owner", identifier);
         return redisTemplate.exec().get(0);
+    }
+
+    /**
+     * 刷新信号量
+     *
+     * @param semname
+     * @param identifier
+     * @return
+     */
+    public boolean refreshFairSemaphore(String semname, String identifier) {
+        // 更新客户端持有的信号量
+        if (redisTemplate.opsForZSet().add(semname, identifier, System.currentTimeMillis())) {
+            releaseFairSemaphore(semname, identifier);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 消除竞争条件
+     *
+     * @param semname
+     * @param limit
+     * @param timeout
+     * @return
+     */
+    public String acquireFairSemaphoreWithLock(String semname, int limit, int timeout) {
+        String identifier = lock.acquireLock(semname, timeout);
+        if (StringUtils.isNotBlank(identifier)) {
+            try {
+                return acquireFairSemaphore(semname, limit, timeout);
+            } finally {
+                lock.releaseLock(semname, identifier);
+            }
+        }
+
+        return null;
     }
 }
