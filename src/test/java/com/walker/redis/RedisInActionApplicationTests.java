@@ -3,6 +3,7 @@ package com.walker.redis;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.walker.redis.cache.SemaphoreRedis;
 import com.walker.redis.dto.*;
 import com.walker.redis.util.HttpClientUtil;
 import org.apache.logging.log4j.util.Strings;
@@ -31,6 +32,8 @@ public class RedisInActionApplicationTests {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+    @Autowired
+    private SemaphoreRedis semaphoreRedis;
 
     @Test
     public void contextLoads() {
@@ -315,5 +318,10 @@ public class RedisInActionApplicationTests {
             String key = "car:butler:virtual:store:" + suffix;
             redisTemplate.opsForList().leftPush(key, dto.getName());
         }
+    }
+
+    @Test
+    public void semaphoreTest() {
+        semaphoreRedis.acquireSemaphore("semaphore", 10, 10000);
     }
 }
