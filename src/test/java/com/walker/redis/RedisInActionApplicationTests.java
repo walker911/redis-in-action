@@ -6,6 +6,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.walker.redis.cache.SemaphoreRedis;
 import com.walker.redis.dto.*;
 import com.walker.redis.util.HttpClientUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +20,10 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -318,6 +323,53 @@ public class RedisInActionApplicationTests {
             String key = "car:butler:virtual:store:" + suffix;
             redisTemplate.opsForList().leftPush(key, dto.getName());
         }
+    }
+
+    @Test
+    public void readHotCity() throws IOException {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\2019热点下单城市.xlsx";
+        List<Object> items = EasyExcel.read(path).head(HotCityDTO.class).sheet().doReadSync();
+        List<GeoDTO> geos = new ArrayList<>();
+        for (Object item : items) {
+            HotCityDTO dto = (HotCityDTO) item;
+            if ("重庆".equals(dto.getCity())) {
+                GeoDTO geo = new GeoDTO();
+                geo.setValue(10);
+
+                String location = dto.getLocation();
+                if (StringUtils.isNotBlank(location)) {
+                    String[] locArr = location.split(",");
+                    Double[] geoCoord = new Double[locArr.length];
+                    for (int i = 0; i < locArr.length; i++) {
+                        geoCoord[i] = Double.parseDouble(locArr[i]);
+                    }
+                    geo.setGeoCoord(geoCoord);
+
+                    geos.add(geo);
+                }
+            }
+        }
+        System.out.println(geos.size());
+        File file = new File("C:\\Users\\ThinkPad\\Desktop\\chongqing.json");
+        FileUtils.writeStringToFile(file, JSON.toJSONString(geos), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void decreaseHeartMap() throws IOException {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\heartmapPoint.json";
+        File file = new File(path);
+        String result = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+        List<GeoDTO> geos = JSON.parseArray(result, GeoDTO.class);
+        List<GeoDTO> dtos = new ArrayList<>();
+        System.out.println(geos.size());
+        for (int i = 0; i < geos.size(); i++) {
+            if (i % 10 == 0) {
+                dtos.add(geos.get(i));
+            }
+        }
+        System.out.println(dtos.size());
+        File heartFile = new File("C:\\Users\\ThinkPad\\Desktop\\heart.json");
+        FileUtils.writeStringToFile(heartFile, JSON.toJSONString(dtos), StandardCharsets.UTF_8);
     }
 
     @Test
