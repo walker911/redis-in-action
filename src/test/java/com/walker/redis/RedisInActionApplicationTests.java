@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.walker.redis.cache.SemaphoreRedis;
 import com.walker.redis.dto.*;
+import com.walker.redis.excel.ReadExcelListener;
 import com.walker.redis.util.HttpClientUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -352,6 +353,12 @@ public class RedisInActionApplicationTests {
         System.out.println(geos.size());
         File file = new File("C:\\Users\\ThinkPad\\Desktop\\chongqing.json");
         FileUtils.writeStringToFile(file, JSON.toJSONString(geos), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void readExcel() {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\2019热点下单城市.xlsx";
+        EasyExcel.read(path, HotCityDTO.class, new ReadExcelListener()).sheet().doRead();
     }
 
     @Test
