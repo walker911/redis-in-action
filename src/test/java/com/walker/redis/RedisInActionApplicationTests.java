@@ -7,6 +7,7 @@ import com.walker.redis.cache.SemaphoreRedis;
 import com.walker.redis.dto.*;
 import com.walker.redis.excel.ReadExcelListener;
 import com.walker.redis.util.HttpClientUtil;
+import com.walker.redis.util.LocationUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -359,6 +360,51 @@ public class RedisInActionApplicationTests {
     public void readExcel() {
         String path = "C:\\Users\\ThinkPad\\Desktop\\2019热点下单城市.xlsx";
         EasyExcel.read(path, HotCityDTO.class, new ReadExcelListener()).sheet().doRead();
+    }
+
+    @Test
+    public void filterLocation() throws IOException {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\geo\\shenzhen.json";
+        File file = new File(path);
+        String result = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+        List<GeoDTO> geos = JSON.parseArray(result, GeoDTO.class);
+
+        System.out.println(geos.size());
+        List<GeoDTO> dtos = new ArrayList<>(Collections.singletonList(geos.get(0)));
+        for (GeoDTO geo : geos) {
+            Double[] location1 = geo.getGeoCoord();
+            boolean isOverflow = false;
+            for (GeoDTO dto : dtos) {
+                Double[] location2 = dto.getGeoCoord();
+                double distance = LocationUtil.getDistance(location1[1], location1[0], location2[1], location2[0]);
+                if (distance < 500 && distance > -500) {
+                    isOverflow = true;
+                    break;
+                }
+            }
+            if (!isOverflow) {
+                dtos.add(geo);
+            }
+        }
+        System.out.println(dtos.size());
+        File heartFile = new File("C:\\Users\\ThinkPad\\Desktop\\shenzhen.json");
+        FileUtils.writeStringToFile(heartFile, JSON.toJSONString(dtos), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void distinct() throws IOException {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\geo\\guangzhou.json";
+        File file = new File(path);
+        String result = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+        List<GeoDTO> geos = JSON.parseArray(result, GeoDTO.class);
+        System.out.println(geos.size());
+        List<GeoDTO> dtos = new ArrayList<>();
+        for (GeoDTO geo : geos) {
+            if (!dtos.contains(geo)) {
+                dtos.add(geo);
+            }
+        }
+        System.out.println(dtos.size());
     }
 
     @Test
