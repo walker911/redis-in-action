@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.walker.redis.cache.SemaphoreRedis;
 import com.walker.redis.dto.*;
 import com.walker.redis.excel.ReadExcelListener;
+import com.walker.redis.model.Insurance;
 import com.walker.redis.util.HttpClientUtil;
 import com.walker.redis.util.LocationUtil;
 import org.apache.commons.io.FileUtils;
@@ -428,5 +429,25 @@ public class RedisInActionApplicationTests {
     @Test
     public void semaphoreTest() {
         semaphoreRedis.acquireSemaphore("semaphore", 10, 10000);
+    }
+
+    @Test
+    public void generateAndSaveTestData() throws IOException {
+        int[] cities = {120100, 140100, 150100, 310100, 320100, 320200, 320400, 320500, 320581, 320582, 330100,
+                330200, 330300, 340100, 350100, 350200, 350500, 370200, 410100, 420100, 430100, 440100, 440300,
+                440600, 441900, 450100, 500100, 510100, 530100, 610100, 620100};
+        String result = FileUtils.readFileToString(new File("E:\\project\\redis-in-action\\src\\main\\resources\\insurance.json"), StandardCharsets.UTF_8);
+        List<Insurance> insurances = JSON.parseArray(result, Insurance.class);
+
+        for (int i = 0; i < cities.length; i++) {
+            int city = cities[i];
+            String key = "insurance:order:real:time:" + city;
+            List<Insurance> data = insurances.stream().map(insurance -> {
+                insurance.setCityCode(String.valueOf(city));
+                return insurance;
+            }).collect(Collectors.toList());
+
+            redisTemplate.opsForValue().set(key, JSON.toJSONString(data));
+        }
     }
 }
