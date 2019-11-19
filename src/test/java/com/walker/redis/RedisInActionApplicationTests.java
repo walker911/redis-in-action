@@ -25,7 +25,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -449,5 +448,23 @@ public class RedisInActionApplicationTests {
 
             redisTemplate.opsForValue().set(key, JSON.toJSONString(data));
         }
+    }
+
+    @Test
+    public void backupData() throws IOException {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\insurance\\";
+        Set<String> keys = redisTemplate.keys("insurance*");
+        for (String key : keys) {
+            byte[] bytes = redisTemplate.dump(key);
+            File file = new File(path + key.replaceAll(":", "-") + ".rdb");
+            FileUtils.writeByteArrayToFile(file, bytes);
+        }
+    }
+
+    @Test
+    public void restoreData() throws IOException {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\butler\\car-butler-day-order.dump";
+        byte[] bytes = FileUtils.readFileToByteArray(new File(path));
+        redisTemplate.restore("test:car:butler:day:order", bytes, 0L, TimeUnit.SECONDS);
     }
 }
