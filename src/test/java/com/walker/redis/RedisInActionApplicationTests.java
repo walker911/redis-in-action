@@ -7,6 +7,8 @@ import com.walker.redis.cache.SemaphoreRedis;
 import com.walker.redis.dto.*;
 import com.walker.redis.excel.ReadExcelListener;
 import com.walker.redis.model.Insurance;
+import com.walker.redis.model.User;
+import com.walker.redis.service.UserService;
 import com.walker.redis.util.HttpClientUtil;
 import com.walker.redis.util.LocationUtil;
 import org.apache.commons.io.FileUtils;
@@ -41,6 +43,8 @@ public class RedisInActionApplicationTests {
     private StringRedisTemplate redisTemplate;
     @Autowired
     private SemaphoreRedis semaphoreRedis;
+    @Autowired
+    private UserService userService;
 
     @Test
     public void contextLoads() {
@@ -466,5 +470,15 @@ public class RedisInActionApplicationTests {
         String path = "C:\\Users\\ThinkPad\\Desktop\\butler\\car-butler-day-order.dump";
         byte[] bytes = FileUtils.readFileToByteArray(new File(path));
         redisTemplate.restore("test:car:butler:day:order", bytes, 0L, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testCacheAnnotation() {
+        User user = new User();
+        user.setUid("1");
+        user.setName("test");
+        userService.saveUser(user);
+        System.out.println(userService.getUser(1L));
+        userService.deleteUser(1L);
     }
 }
