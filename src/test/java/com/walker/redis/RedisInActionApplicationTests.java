@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -480,5 +481,15 @@ public class RedisInActionApplicationTests {
         userService.saveUser(user);
         System.out.println(userService.getUser(1L));
         userService.deleteUser(1L);
+    }
+
+    @Test
+    public void testListPush() {
+        redisTemplate.opsForList().rightPushAll("test:list", "1", "2", "3");
+    }
+
+    @Test
+    public void testListRemove() {
+        redisTemplate.opsForList().remove("test:list", 0, "2");
     }
 }
