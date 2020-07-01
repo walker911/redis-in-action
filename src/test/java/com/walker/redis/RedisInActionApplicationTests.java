@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.walker.redis.cache.SemaphoreRedis;
 import com.walker.redis.dto.*;
+import com.walker.redis.excel.CarButlerDTOExcelListener;
+import com.walker.redis.excel.InsuranceDTOExcelListener;
 import com.walker.redis.excel.ReadExcelListener;
 import com.walker.redis.model.Insurance;
 import com.walker.redis.model.User;
@@ -491,5 +493,36 @@ public class RedisInActionApplicationTests {
     @Test
     public void testListRemove() {
         redisTemplate.opsForList().remove("test:list", 0, "2");
+    }
+
+    @Test
+    public void testHash() {
+        int second = LocalTime.now().toSecondOfDay();
+        User user = new User();
+        user.setUid("1");
+        user.setName("test");
+        redisTemplate.opsForHash().put("time", String.valueOf(second), JSON.toJSONString(user));
+    }
+
+    @Test
+    public void testListContains() {
+        List<User> users = new ArrayList<>();
+        User user = new User();
+        user.setUid("1");
+        user.setName("test");
+        users.add(user);
+        System.out.println(users.contains(user));
+    }
+
+    @Test
+    public void testInsExcelIntoRedis() {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\上海市保险前10天报价订单数据.xlsx";
+        EasyExcel.read(path, InsuranceDTO.class, new InsuranceDTOExcelListener(redisTemplate)).sheet().doRead();
+    }
+
+    @Test
+    public void testCarButlerExcelIntoRedis() {
+        String path = "C:\\Users\\ThinkPad\\Desktop\\boyibodeshuju(1).xlsx";
+        EasyExcel.read(path, CarButlerDTO.class, new CarButlerDTOExcelListener(redisTemplate)).sheet().doRead();
     }
 }
