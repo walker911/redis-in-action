@@ -13,6 +13,7 @@ import com.walker.redis.model.User;
 import com.walker.redis.service.UserService;
 import com.walker.redis.util.HttpClientUtil;
 import com.walker.redis.util.LocationUtil;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -524,5 +525,15 @@ public class RedisInActionApplicationTests {
     public void testCarButlerExcelIntoRedis() {
         String path = "C:\\Users\\ThinkPad\\Desktop\\boyibodeshuju(1).xlsx";
         EasyExcel.read(path, CarButlerDTO.class, new CarButlerDTOExcelListener(redisTemplate)).sheet().doRead();
+    }
+
+    @Test
+    public void testHashDel() {
+        String key = "insurance:order:real:time:sub:310100";
+        List<Object> keys = Arrays.asList("12:01:32", "10:21:46");
+        Object[] strs = keys.toArray();
+        redisTemplate.opsForHash().delete(key, strs);
+        List<Object> values = redisTemplate.opsForHash().multiGet(key, keys);
+        System.out.println(values);
     }
 }
