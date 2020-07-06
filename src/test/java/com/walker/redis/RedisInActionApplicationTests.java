@@ -11,6 +11,7 @@ import com.walker.redis.excel.ReadExcelListener;
 import com.walker.redis.model.Insurance;
 import com.walker.redis.model.User;
 import com.walker.redis.service.UserService;
+import com.walker.redis.util.DateUtil;
 import com.walker.redis.util.HttpClientUtil;
 import com.walker.redis.util.LocationUtil;
 import org.apache.commons.collections4.CollectionUtils;
@@ -535,5 +536,14 @@ public class RedisInActionApplicationTests {
         redisTemplate.opsForHash().delete(key, strs);
         List<Object> values = redisTemplate.opsForHash().multiGet(key, keys);
         System.out.println(values);
+    }
+
+    @Test
+    public void testHashKeys() {
+        String key = "car:butler:province:cache:order:广东";
+        Set<Object> dates = redisTemplate.opsForHash().keys(key);
+        List<Date> list = dates.stream().map(obj -> DateUtil.parseDate(String.valueOf(obj), DateUtil.NORMAL_PATTERN))
+                .sorted().collect(Collectors.toList());
+        System.out.println(list);
     }
 }
