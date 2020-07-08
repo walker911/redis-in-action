@@ -33,20 +33,21 @@ public class InsuranceDTOExcelListener extends AnalysisEventListener<InsuranceDT
 
     @Override
     public void invoke(InsuranceDTO insuranceDTO, AnalysisContext analysisContext) {
+        insuranceDTO.setCityCode(insuranceDTO.getCityCode().substring(0, 6));
         dtos.add(insuranceDTO);
         if (dtos.size() >= BATCH_COUNT) {
-            saveIntoRedis();
+            intoRedis();
             dtos.clear();
         }
     }
 
     @Override
     public void doAfterAllAnalysed(AnalysisContext analysisContext) {
-        saveIntoRedis();
+        intoRedis();
     }
 
     private void saveIntoRedis() {
-        String key = "insurance:order:real:time:sub:310100";
+        String key = "insurance:sub:real:time:310100";
         Map<String, String> params = new HashMap<>();
         if (!CollectionUtils.isEmpty(dtos)) {
             for (InsuranceDTO dto : dtos) {
@@ -60,6 +61,18 @@ public class InsuranceDTOExcelListener extends AnalysisEventListener<InsuranceDT
                     carIds.add(dto.getCarId());
                 }
                 params.put(k, JSON.toJSONString(carIds));
+            }
+            redisTemplate.opsForHash().putAll(key, params);
+        }
+    }
+
+    private void intoRedis() {
+        String key = "insurance:sub:real:time:310100";
+        Map<String, String> params = new HashMap<>();
+        if (!CollectionUtils.isEmpty(dtos)) {
+            for (InsuranceDTO dto : dtos) {
+                String k = DateUtil.localDateTimeToString(DateUtil.toLocalDateTime(dto.getDate()), DateUtil.NORMAL_PATTERN);
+                params.put(k, JSON.toJSONString(dto));
             }
             redisTemplate.opsForHash().putAll(key, params);
         }

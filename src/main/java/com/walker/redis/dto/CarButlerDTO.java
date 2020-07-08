@@ -15,7 +15,7 @@ import java.util.Date;
 @Data
 public class CarButlerDTO {
 
-    private Integer id;
+    // private Integer id;
 
     private Date date;
 

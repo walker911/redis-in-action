@@ -1,5 +1,8 @@
 package com.walker.redis.dto;
 
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.format.NumberFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 
 import java.util.Date;
@@ -15,10 +18,11 @@ import java.util.Date;
 @Data
 public class InsuranceDTO {
 
+    private String carId;
+
+    @JSONField(serialize = false)
     private Date date;
 
-    private String city;
-
-    private String carId;
+    private String cityCode;
 
 }

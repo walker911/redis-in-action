@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -518,13 +519,18 @@ public class RedisInActionApplicationTests {
 
     @Test
     public void testInsExcelIntoRedis() {
-        String path = "C:\\Users\\ThinkPad\\Desktop\\上海市保险前10天报价订单数据.xlsx";
+        // String path = "C:\\Users\\ThinkPad\\Desktop\\ins\\车险成都前30天数据.xlsx";
+        String path = "C:\\Users\\ThinkPad\\Desktop\\ins\\车险上海前10天数据.xlsx";
+        // String path = "C:\\Users\\ThinkPad\\Desktop\\ins\\车险南京前30天数据.xlsx";
         EasyExcel.read(path, InsuranceDTO.class, new InsuranceDTOExcelListener(redisTemplate)).sheet().doRead();
     }
 
     @Test
     public void testCarButlerExcelIntoRedis() {
-        String path = "C:\\Users\\ThinkPad\\Desktop\\boyibodeshuju(1).xlsx";
+        String path = "C:\\Users\\ThinkPad\\Desktop\\butler\\广东省6.1-7.7.xlsx";
+        // String path = "C:\\Users\\ThinkPad\\Desktop\\butler\\江苏6.1-7.7.xlsx";
+        // String path = "C:\\Users\\ThinkPad\\Desktop\\butler\\上海6.1-7.7.xlsx";
+        // String path = "C:\\Users\\ThinkPad\\Desktop\\butler\\浙江省6.6-7.7.xlsx";
         EasyExcel.read(path, CarButlerDTO.class, new CarButlerDTOExcelListener(redisTemplate)).sheet().doRead();
     }
 
@@ -545,5 +551,42 @@ public class RedisInActionApplicationTests {
         List<Date> list = dates.stream().map(obj -> DateUtil.parseDate(String.valueOf(obj), DateUtil.NORMAL_PATTERN))
                 .sorted().collect(Collectors.toList());
         System.out.println(list);
+    }
+
+    @Test
+    public void testInsDelete() {
+        String key = "insurance:sub:real:time:310100";
+        // String key = "insurance:sub:real:time:320100";
+        // String key = "insurance:sub:real:time:510100";
+        Set<Object> dates = redisTemplate.opsForHash().keys(key);
+        List<Date> list = dates.stream().map(obj -> DateUtil.parseDate(String.valueOf(obj), DateUtil.NORMAL_PATTERN))
+                .sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+        // List<Date> subList = list.subList(0, 100);
+        // subList.forEach(date -> System.out.println(DateUtil.localDateTimeToString(DateUtil.toLocalDateTime(date), DateUtil.NORMAL_PATTERN)));
+        if (list.size() > 10000) {
+            List<Date> subList = list.subList(9000, list.size());
+            Object[] hKeys = subList.stream()
+                    .map(date -> DateUtil.localDateTimeToString(DateUtil.toLocalDateTime(date), DateUtil.NORMAL_PATTERN)).toArray();
+            redisTemplate.opsForHash().delete(key, hKeys);
+        }
+    }
+
+    @Test
+    public void testCarButlerDelete() {
+        // String key = "car:butler:province:cache:order:浙江";
+        // String key = "car:butler:province:cache:order:江苏";
+        String key = "car:butler:province:cache:order:广东";
+        // String key = "car:butler:province:cache:order:上海";
+        Set<Object> dates = redisTemplate.opsForHash().keys(key);
+        List<Date> list = dates.stream().map(obj -> DateUtil.parseDate(String.valueOf(obj), DateUtil.NORMAL_PATTERN))
+                .sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+        // List<Date> subList = list.subList(0, 100);
+        // subList.forEach(date -> System.out.println(DateUtil.localDateTimeToString(DateUtil.toLocalDateTime(date), DateUtil.NORMAL_PATTERN)));
+        if (list.size() > 27000) {
+            List<Date> subList = list.subList(27000, list.size());
+            Object[] hKeys = subList.stream()
+                    .map(date -> DateUtil.localDateTimeToString(DateUtil.toLocalDateTime(date), DateUtil.NORMAL_PATTERN)).toArray();
+            redisTemplate.opsForHash().delete(key, hKeys);
+        }
     }
 }
